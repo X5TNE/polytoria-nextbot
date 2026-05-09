@@ -1,4 +1,5 @@
 -- npc follow script by me ig
+-- licensed under CC-BY please credit me -X5TNE (beanboI223 or beanboi_223)
 npc = script.Parent
 env = game["Environment"]
 env.AutoGenerateNavMesh = true
@@ -9,7 +10,7 @@ spawnhere = npc.Position -- where the NPC spawned originally
 closestpos = Vector3.new(0, 0, 0)
 lastsafepos = spawnhere
 lastpos = spawnhere
-currentclosest = 2^30 -- close enough to 2,147,483,647
+currentclosest = 2^30 -- aprox of math.huge() (I thought math.huge was here??)
 closest = nil
 closestname = ""
 lastclosestname = ""
@@ -20,13 +21,15 @@ timer = 0
 
 timeout = 10 -- Default 10 decisecond aka 1 second
 -- default penalty
+-- Eventually i'll move to some primitive reinforcement learning form (without NNs of course :D)
 function returndefaultconsequence()
 	return function(npcpos, plrpos)
 		local pathbrick = Instance.New("Part")
 		pathbrick.Parent = env
 		pathbrick.Anchored = true
 		pathbrick.Size = Vector3.New(0.01, 0.01, 0.01)
-		pathbrick.Position = npcpos + (npcpos - plrpos) -- (Position + Linear Direction -> Target) Not the best, but it works.
+		-- Move somewhere different than the current failure state
+		pathbrick.Position = npcpos + (npcpos - plrpos) -- (Position + Linear Direction <- Target) Not the best, but it works. 
 		npc.MoveTarget(pathbrick)
 	end
 end
@@ -44,8 +47,8 @@ npc.Touched:Connect(function(hit)
           if debounce ~= true then
               hit.Health = hit.Health - 1
               debounce = true
-			  
-			  task.delay(0.1, function()
+			  -- whoops roblox syntax again
+			  delay(0.1, function()
 	              debounce = false -- finally fixed LOL
 	          end)
           end
@@ -54,9 +57,10 @@ npc.Touched:Connect(function(hit)
     end
 end)
 
+-- Soon, i'm not the best at coding but i will make a better loop.
 while wait(0.1) do
 	closest = nil
-    currentclosest = math.huge
+    currentclosest = 2^30
 	local players = game["Players"]:GetPlayers()
     local mindis = 1000
     for i=1, #players do
@@ -132,16 +136,22 @@ while wait(0.1) do
 		
 	end -- force wait for players
 	npc:SetNavDestination(env:GetPointOnNavMesh(closest.Position))
+	-- for debugging
 	if closestname ~= lastclosestname then print("Hunting: ".. closestname.. script.Parent.Parent.Name) lastclosestname = closestname end
-	if npc.Position == lastpos and timer >= timeout then
+	if Vector3.Distance(npc.Position, lastpos) < 0.9 and timer >= timeout then
 		timer = 0
-		penality(npc.Position, closest.Position)
+		local yesproceedwiththisrepeatingprint = false
+		pcall(function(dothisplease) 
+		if dothisplease then print("Calling penality with: ", npc.Position, " | ", closest.Position) end
+		end,yesproceedwiththisrepeatingprint)
+		pcall(penality, npc.Position, closest.Position)
 	end
-	if npc.Position == lastpos and timer < timeout then
+	if Vector3.Distance(npc.Position, lastpos) < 0.9 and timer < timeout then
 		timer = timer + 1
 	end
-	if npc.Position ~= lastpos then
+	if Vector3.Distance(npc.Position, lastpos) > 0.9 then
 		lastpos = npc.Position
+		timer = 0
 	end
 end
 
