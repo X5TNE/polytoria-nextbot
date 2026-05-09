@@ -16,23 +16,32 @@ closestname = ""
 lastclosestname = ""
 timer = 0
 
+-- helper
+local function randf(min, max)
+    return min + math.random() * (max - min)
+end
+
 -- Penalities!
 -- Stop the "model" from staying in the same position
 
 timeout = 10 -- Default 10 decisecond aka 1 second
 -- default penalty
 -- Eventually i'll move to some primitive reinforcement learning form (without NNs of course :D)
+-- Still not Reinforcement Learning (RL)
 function returndefaultconsequence()
-	return function(npcpos, plrpos)
-		local pathbrick = Instance.New("Part")
-		pathbrick.Parent = env
-		pathbrick.Anchored = true
-		pathbrick.Size = Vector3.New(0.01, 0.01, 0.01)
-		-- Move somewhere different than the current failure state
-		pathbrick.Position = npcpos + (npcpos - plrpos) -- (Position + Linear Direction <- Target) Not the best, but it works. 
-		npc.MoveTarget(pathbrick)
+	return function(npcpos, chrpos)
+		-- new update, noise + repulsion
+		local randomvec = Vector3.New(
+		    randf(-5,5),
+		    0,
+		    randf(-5,5)
+		)
+	
+		local pathdest = npcpos + ((npcpos - chrpos) + randomvec) -- Position + (Linear Direction + noise) Not the best, but it works. 
+		npc:SetNavDestination(env:GetPointOnNavMesh(pathdest))
 	end
 end
+-- Modular kinda?
 penality = returndefaultconsequence() -- Make your own function and share so eventually everyone can have the best pathfinding system!
 
 
@@ -47,18 +56,26 @@ npc.Touched:Connect(function(hit)
           if debounce ~= true then
               hit.Health = hit.Health - 1
               debounce = true
-			  -- whoops roblox syntax again
-			  delay(0.1, function()
-	              debounce = false -- finally fixed LOL
-	          end)
+			  -- nvm, basic fix here
+			  wait(1)
+			 debounce = false
           end
     elseif hit:IsA("Part") then
         npc:Jump()
+	elseif hit:IsA("Npc") then
+		penality(npc.Position, hit.Position) -- Stop it from walking into fellow nextbots by accident
+		-- Edit: Didn't work as intended, but I'll fix later, for now it works if there are multiple players in game and nextbots are spread out
     end
 end)
 
 -- Soon, i'm not the best at coding but i will make a better loop.
 while wait(0.1) do
+	local noise = Vector3.New(
+		randf(-1.0, 1.0),
+		0,
+		randf(-1.0, 1.0)
+	)
+	
 	closest = nil
     currentclosest = 2^30
 	local players = game["Players"]:GetPlayers()
@@ -135,7 +152,7 @@ while wait(0.1) do
 		until closest
 		
 	end -- force wait for players
-	npc:SetNavDestination(env:GetPointOnNavMesh(closest.Position))
+	npc:SetNavDestination(env:GetPointOnNavMesh(closest.Position + noise))
 	-- for debugging
 	if closestname ~= lastclosestname then print("Hunting: ".. closestname.. script.Parent.Parent.Name) lastclosestname = closestname end
 	if Vector3.Distance(npc.Position, lastpos) < 0.9 and timer >= timeout then
