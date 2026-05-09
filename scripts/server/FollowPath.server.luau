@@ -23,7 +23,7 @@ npc.Touched:Connect(function(hit)
     end
 end)
 
-while wait(0.01) do
+while wait(1.26) do
     local players = game["Players"]:GetPlayers()
     local closest = nil
     local currentclosest = 2^30 -- close enough to 2,147,483,647
