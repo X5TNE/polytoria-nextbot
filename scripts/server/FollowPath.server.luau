@@ -48,9 +48,8 @@ npc.Touched:Connect(function(hit)
               hit.Health = hit.Health - 1
               debounce = true
 			  -- whoops roblox syntax again
-			  delay(0.1, function()
-	              debounce = false -- finally fixed LOL
-	          end)
+			  wait(2)
+			  debounce = false
           end
     elseif hit:IsA("Part") then
         npc:Jump()
