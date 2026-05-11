@@ -1016,8 +1016,10 @@ New: (NetworkedObject?) -> (Camera),
 
 
 declare class Light extends Dynamic
+	Enabled : boolean
 	Color : Color
 	Brightness : number
+	LightSize : number
 	Specular : number
 	Shadows : boolean
 end
