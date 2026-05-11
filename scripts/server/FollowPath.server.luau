@@ -45,7 +45,7 @@ end)
 npc.Touched:Connect(function(hit) 
     if hit:IsA("Player") and hit.Health > 0 then
           if debounce ~= true then
-              hit.Health = hit.Health - 1
+              hit.Health = 0
               debounce = true
 			  -- whoops roblox syntax again
 			  wait(2)
