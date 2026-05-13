@@ -134,7 +134,20 @@ while wait(0.1) do
 		until closest
 		
 	end -- force wait for players
-	npc:SetNavDestination(env:GetPointOnNavMesh(closest.Position))
+	local separation = Vector3.new(0,0,0)
+	local npclist = env:GetDescendants()
+	for i=1, #npclist do
+		local other = npclist[i]
+		if other:IsA("npc") and other ~= npc then
+			local offset = npc.Position - other.Position
+			local dist = Vector3.Distance(npc.Position, other.Position)
+			-- pretty sure there was a better way, think it was called .unit or .normal
+			if dist > 0 and dist < 20 then
+				separation = separation + (Vector3.Normalize(offset) / dist)
+			end
+		end
+	end
+	npc:SetNavDestination(env:GetPointOnNavMesh(closest.Position + separation))
 	-- for debugging
 	if closestname ~= lastclosestname then print("Hunting: ".. closestname.. script.Parent.Parent.Name) lastclosestname = closestname end
 	if Vector3.Distance(npc.Position, lastpos) < 0.9 and timer >= timeout then
